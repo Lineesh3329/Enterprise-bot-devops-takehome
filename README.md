@@ -162,5 +162,5 @@ Detailed findings are documented in `lab/FINDINGS.md`.
 
 ## AI Assistance
 
-AI assistance was used to help understand this task and files inside it. Troubleshooting output wherever I stucked somewhile.## **Development Process — From Start to Finish**
+AI assistance was used to understand troubleshooting output, investigate errors, and prepare parts of the project documentation. I reviewed the suggestions and tested changes using the available commands and verification scripts. The remaining Part 4 failures are documented honestly.
 
