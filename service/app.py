@@ -5,12 +5,13 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 
-def get_config(name, default):
-    config_file = Path("/etc/app-config") / name
+def get_config(env_name, file_name, default):
+    # Support live ConfigMap updates through mounted files.
+    config_file = Path("/etc/app-config") / file_name
     try:
         return config_file.read_text().strip()
     except OSError:
-        return os.getenv(name.upper(), default)
+        return os.environ.get(env_name, default)
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -19,11 +20,12 @@ class Handler(BaseHTTPRequestHandler):
             body = b'{"status":"ok"}'
             self.send_response(200)
         elif self.path == "/":
-            body = json.dumps({
-                "app": get_config("appName", "demo-app"),
-                "version": get_config("version", "1.0.0"),
+            response = {
+                "app": get_config("APP_NAME", "appName", "demo-app"),
+                "version": get_config("VERSION", "version", "1.0.0"),
                 "pod": socket.gethostname(),
-            }).encode()
+            }
+            body = json.dumps(response).encode()
             self.send_response(200)
         else:
             self.send_error(404)
