@@ -85,3 +85,37 @@ The migration Job completed, and the backend, gateway, worker, and metrics deplo
 Earlier direct requests to the backend and gateway returned HTTP 200, so their probe failures require a final recheck. The reporter's JSON parsing failure remains unresolved.
 
 The original `scenario.sh` and `cluster-state/` files were not intentionally modified. Part 4 is not fully verified. Further investigation would compare the reporter's Kubernetes API request and response handling with the successful request from the test pod.
+
+
+
+--------------------------
+
+## Part 5 — Gateway API Migration Plan
+
+### Migration Strategy
+
+I would migrate from Kubernetes Ingress to Gateway API incrementally to minimise downtime and reduce risk.
+
+**1. Install Gateway API CRDs and Controller**
+
+First, install the Gateway API Custom Resource Definitions (CRDs) and choose a compatible Gateway API controller, such as Envoy Gateway. Verify that the controller is running and supports the required API versions.
+
+**2. Create Gateway Resources**
+
+Define a `GatewayClass` managed by the selected controller, followed by a `Gateway` specifying listeners, ports, hostnames, and TLS configuration. Configure `HTTPRoute` resources to route traffic to the existing Kubernetes Services.
+
+**3. Validate Routing**
+
+Initially, deploy the Gateway API resources alongside the existing Ingress. Test application endpoints, health checks, hostname-based routing, TLS, and backend connectivity. Validate that the routes are accepted and programmed by the controller.
+
+**4. Gradual Traffic Migration**
+
+Direct test traffic to the new Gateway and compare its behaviour with the existing Ingress. After successful validation, gradually switch production traffic using DNS or load-balancer configuration. Monitor error rates, latency, and application availability throughout the transition.
+
+**5. Rollback and Cleanup**
+
+Keep the existing Ingress configuration available during the migration. If issues occur, restore traffic to the Ingress and investigate before retrying. Once the Gateway API configuration is stable, remove the obsolete Ingress resources and update deployment documentation.
+
+### Key Considerations
+
+Gateway API is a set of Kubernetes APIs, not a controller by itself. Controller compatibility, supported features, TLS management, observability, and rollback procedures must be verified before production adoption.
