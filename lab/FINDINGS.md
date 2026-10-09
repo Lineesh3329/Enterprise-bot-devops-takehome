@@ -92,30 +92,26 @@ The original `scenario.sh` and `cluster-state/` files were not intentionally mod
 
 ## Part 5 — Gateway API Migration Plan
 
-### Migration Strategy
+I would migrate from Kubernetes Ingress to Gateway API gradually to minimise downtime and make rollback easier.
 
-I would migrate from Kubernetes Ingress to Gateway API incrementally to minimise downtime and reduce risk.
+### 1. Install and Validate
 
-**1. Install Gateway API CRDs and Controller**
+First, I would check the Kubernetes version and install the required Gateway API CRDs and a compatible Gateway API controller. Gateway API resources alone do not handle traffic without a controller.
 
-First, install the Gateway API Custom Resource Definitions (CRDs) and choose a compatible Gateway API controller, such as Envoy Gateway. Verify that the controller is running and supports the required API versions.
+### 2. Configure Routing
 
-**2. Create Gateway Resources**
+I would create a `GatewayClass` and a `Gateway` with the required listeners and ports. Then I would create an `HTTPRoute` to direct requests to the existing Kubernetes Services.
 
-Define a `GatewayClass` managed by the selected controller, followed by a `Gateway` specifying listeners, ports, hostnames, and TLS configuration. Configure `HTTPRoute` resources to route traffic to the existing Kubernetes Services.
+### 3. Test Before Switching Traffic
 
-**3. Validate Routing**
+I would keep the existing Ingress running while testing the new routes. I would verify hostname routing, backend connectivity, health endpoints, and TLS if required. I would also check that the controller accepts and programs the routes correctly.
 
-Initially, deploy the Gateway API resources alongside the existing Ingress. Test application endpoints, health checks, hostname-based routing, TLS, and backend connectivity. Validate that the routes are accepted and programmed by the controller.
+### 4. Migrate and Monitor
 
-**4. Gradual Traffic Migration**
+After testing, I would gradually move traffic to the Gateway using the appropriate load-balancer or DNS configuration. I would monitor HTTP errors, latency, and application availability.
 
-Direct test traffic to the new Gateway and compare its behaviour with the existing Ingress. After successful validation, gradually switch production traffic using DNS or load-balancer configuration. Monitor error rates, latency, and application availability throughout the transition.
+### 5. Rollback
 
-**5. Rollback and Cleanup**
+If problems occur, I would redirect traffic to the existing Ingress while troubleshooting. I would remove the old Ingress only after the new configuration had been validated.
 
-Keep the existing Ingress configuration available during the migration. If issues occur, restore traffic to the Ingress and investigate before retrying. Once the Gateway API configuration is stable, remove the obsolete Ingress resources and update deployment documentation.
-
-### Key Considerations
-
-Gateway API is a set of Kubernetes APIs, not a controller by itself. Controller compatibility, supported features, TLS management, observability, and rollback procedures must be verified before production adoption.
+I have not implemented this migration in the current project; this is the approach I would follow in a real environment.
